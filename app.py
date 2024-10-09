@@ -28,8 +28,6 @@ class stype(Enum):
                 return stype.Vefþróun
             case 7:
                 return stype.Annað
-        
-    
     
 class spurning:
     def __init__(self,num,intype,title,text,author) -> None:
@@ -112,7 +110,6 @@ class user:
     
     def __str__(self) -> str:
         return f"id: {self.id}, status: {self.status.name}, username: {self.username}, password: {self.password}, privlage: {self.privlage.name} numer af spurningum: {len(self.spurningar)}"
-
 
 class userhandler:
     
