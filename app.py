@@ -32,8 +32,9 @@ class stype(Enum):
     
     
 class spurning:
-    def __init__(self,num,intype,title,text) -> None:
+    def __init__(self,num,intype,title,text,author) -> None:
         self.id:int =num
+        self.author=author
         self.type:stype =stype.new(intype)
         self.title:str =title
         self.text:str =text
@@ -45,10 +46,11 @@ class spurningahandler:
     
     def __init__(self):
         self.listin = []
+        self.idhandle=0
         
-    def addto(self,type,title,text):
-        
-        tspur = spurning(len(self.listin)+1,type,title,text)
+    def addto(self,type,title,text,auth):
+        self.idhandle=+1
+        tspur = spurning(self.idhandle,type,title,text,auth)
         self.listin.append(tspur)
         
     def printall(self):
@@ -60,6 +62,20 @@ class status(Enum):
     Óvirkur =1
     Tímabundiðbann =2
     Bann =3
+    annad=4
+    
+    def new(num):
+        match num:
+            case 0:
+                return status.Virkur
+            case 1:
+                return status.Óvirkur
+            case 2:
+                return status.Tímabundiðbann
+            case 3:
+                return status.Bann
+            case 4:
+                return status.annad
     
 class privlage(Enum):
     Byrjandi =0
@@ -67,15 +83,60 @@ class privlage(Enum):
     Lengrakominn =2
     Súpernotandi =3
     Stjórnandi =4
+    annad=5
+    
+    def new(num):
+        match num:
+            case 0:
+                return privlage.Byrjandi
+            case 1:
+                return privlage.Hefðbundinn
+            case 2:
+                return privlage.Lengrakominn
+            case 3:
+                return privlage.Súpernotandi
+            case 4:
+                return privlage.Stjórnandi
+            case 5:
+                return privlage.annad
     
 class user:
-    def __init__(self,id,status,privlage) -> None:
+    def __init__(self,id,statuss,usname,passw,privlagee) -> None:
         self.id:int=id
-        self.status:status=status
-        self.privlage:privlage=privlage
 
+        self.status=status.new(statuss)
+        self.username=usname
+        self.password=passw
+        self.privlage=privlage.new(privlagee)
+        self.spurningar=[]
+    
+    def __str__(self) -> str:
+        return f"id: {self.id}, status: {self.status.name}, username: {self.username}, password: {self.password}, privlage: {self.privlage.name} numer af spurningum: {len(self.spurningar)}"
+
+
+class userhandler:
+    
+    def __init__(self):
+        self.listin = []
+        self.idhandle=0
+        
+    def addto(self,status,username,password,privlage):
+        self.idhandle=+1
+        tuser = user(self.idhandle,status,username,password,privlage)
+        self.listin.append(tuser)
+        
+    def printall(self):
+        for i in self.listin:
+            print(i)
 
 sh = spurningahandler()
+uh = userhandler()
 
-sh.addto(1,"asdasd","asdasd")
+sh.addto(1,"asdasd","asdasd",1)
 sh.printall()
+
+uh.addto(1,"test",1234,1)
+uh.printall()
+
+x = privlage.Byrjandi
+print(x.name)
