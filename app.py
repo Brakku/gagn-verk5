@@ -1,4 +1,14 @@
 from enum import Enum
+from hashlib import sha256
+import psycopg2
+
+def connecter():
+    conn = psycopg2.connect("dbname=lokaverk user=postgres password=1234")
+    conn.autocommit = True
+    cur = conn.cursor()
+    print("connected")
+    return cur
+
 
 class stype(Enum):
     Forritun = 0
@@ -99,9 +109,9 @@ class privlage(Enum):
                 return privlage.annad
     
 class user:
-    def __init__(self,id,statuss,usname,passw,privlagee) -> None:
+    def __init__(self,id,statuss,usname,passw,privlagee,rating) -> None:
         self.id:int=id
-
+        self.rating=rating
         self.status=status.new(statuss)
         self.username=usname
         self.password=passw
@@ -117,23 +127,201 @@ class userhandler:
         self.listin = []
         self.idhandle=0
         
-    def addto(self,status,username,password,privlage):
+    def addto(self,status,username,password,privlage,rating):
         self.idhandle=+1
-        tuser = user(self.idhandle,status,username,password,privlage)
+        tuser = user(self.idhandle,status,username,password,privlage,rating)
         self.listin.append(tuser)
         
     def printall(self):
         for i in self.listin:
             print(i)
+            
 
+
+class Datamanager:
+    cur = connecter()
+    
+    def __init__(self):
+        self.iduser=0
+        self.idspur=0
+        self.idlausn=0
+        
+        self.idgetter()
+    
+    def idgetter(self):
+        query =f"select count(uid) from users"
+        self.cur.execute(query)
+        uid = self.cur.fetchall()
+        self.iduser = uid[0][0]
+        
+        query =f"select count(sid) from spurningar"
+        self.cur.execute(query)
+        sid = self.cur.fetchall()
+        self.idspur = sid[0][0]
+        
+        query =f"select count(lid) from lausnir"
+        self.cur.execute(query)
+        lid = self.cur.fetchall()
+        self.idlausn = lid[0][0]
+    
+
+    def adduser(self,username,password,status,privlage):
+        self.iduser +=1
+        
+        encripted = sha256(password.encode('utf-8')).hexdigest()
+        
+        x= f"{self.iduser},'{username}','{encripted}',{status},{privlage}"
+        
+        query =f"call adduser({x})"
+        
+        try:
+            self.cur.execute(query)
+        except psycopg2.errors.UniqueViolation:
+            print("nafn er tekið")
+        except:
+            print("villa")
+        
+    def upuser(self,id,username,password,status,privlage):
+        
+        encripted = sha256(password.encode('utf-8')).hexdigest()
+        x= f"{id},'{username}','{encripted}',{status},{privlage}"
+        
+        query =f"call upuser({x})"
+        try:
+            self.cur.execute(query)
+        except psycopg2.errors.UniqueViolation:
+            print("nafn er tekið")
+        except:
+            print("villa")
+        
+    def deluser(self,id):
+        x= f"{id}"
+        
+        query =f"call deluser({x})"
+        self.cur.execute(query)
+    
+    def loadusers(self):
+        
+        query =f"select * from users"
+        self.cur.execute(query)
+        uslist = self.cur.fetchall()
+        for user in uslist:
+            print(user)
+            
+    
+            
+    def addspurning(self,author,stype,title,text):
+        self.idspur+=1
+        x= f"{self.idspur},{author},{stype},'{title}','{text}'"
+        
+        query =f"call addspurning({x})"
+        self.cur.execute(query)
+        
+    def upspurning(self,id,author,stype,title,text):
+        x= f"{id},{author},{stype},'{title}','{text}'"
+        
+        query =f"call upspurning({x})"
+        self.cur.execute(query)
+        
+    def delspurning(self,id):
+        x= f"{id}"
+        
+        query =f"call delspurning({x})"
+        self.cur.execute(query)
+    
+    def loadspurning(self):
+        
+        query =f"select * from spurningar"
+        self.cur.execute(query)
+        splist = self.cur.fetchall()
+        for spurningar in splist:
+            print(spurningar)
+            
+            
+    
+    def addlausn(self,author,spurning,texti,rating):
+        self.idlausn +=1
+        
+        x= f"{self.idlausn},{author},{spurning},'{texti}',{rating}"
+        
+        query =f"call addlausn({x})"
+        
+        try:
+            self.cur.execute(query)
+        except:
+            print("villa")
+            
+    def loadlausnir(self):
+        
+        query =f"select * from lausnir"
+        self.cur.execute(query)
+        laulist = self.cur.fetchall()
+        for lausnir in laulist:
+            print(lausnir)
+            
+            
+    def adminchangestatus(self,uid,nstatus,adminid,admpass):
+        
+        try:
+            query =f"select passw from users where privlage = 4 and uid = {adminid}"
+            self.cur.execute(query)
+            adminpassreal = self.cur.fetchall()
+            if adminpassreal[0][0] == sha256(admpass.encode('utf-8')).hexdigest():
+                
+                x= f"{uid},{nstatus}"
+                
+                query =f"call adminchangestatus({x})"
+                self.cur.execute(query)
+            
+            else:
+                print("incorrect credentials")
+        except:
+            print("villa")    
+    
+    def __str__(self) :
+        return f"connection: {self.cur}"
+
+
+dm = Datamanager()
+
+dm.adduser("testuser","1234",0,1)
+
+dm.adduser("admin","1",0,4)
+
+dm.loadusers()
+
+dm.adminchangestatus(1,3,2,"1")
+
+dm.loadusers()
+
+
+"""
+dm.adduser("abba","1234",1,1,1)
+dm.adduser("abba","1234",1,1,1)
+dm.loadusers()
+dm.upuser(1,"virkar","1234",2,2,2)
+print()
+dm.loadusers()
+dm.deluser(1)
+print()
+dm.loadusers()
+"""
+
+"""
+dm.addspurning(1,1,"a","aa")
+dm.loadspurning()
+"""
+
+"""
 sh = spurningahandler()
 uh = userhandler()
 
 sh.addto(1,"asdasd","asdasd",1)
 sh.printall()
 
-uh.addto(1,"test",1234,1)
+uh.addto(1,"test",1234,1,1)
 uh.printall()
 
 x = privlage.Byrjandi
 print(x.name)
+"""

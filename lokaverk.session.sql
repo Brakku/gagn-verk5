@@ -1,1 +1,1 @@
-SELECT * from spurningar
+SELECT count(uid) from users
