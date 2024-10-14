@@ -240,16 +240,19 @@ class Datamanager:
             
     
     def addlausn(self,author,spurning,texti,rating):
-        self.idlausn +=1
-        
-        x= f"{self.idlausn},{author},{spurning},'{texti}',{rating}"
-        
-        query =f"call addlausn({x})"
-        
-        try:
-            self.cur.execute(query)
-        except:
-            print("villa")
+        if rating >0 or rating <10:
+            self.idlausn +=1
+            
+            x= f"{self.idlausn},{author},{spurning},'{texti}',{rating}"
+            
+            query =f"call addlausn({x})"
+            
+            try:
+                self.cur.execute(query)
+            except:
+                print("villa")
+        else:
+            print("rating of hátt/lágt")
             
     def loadlausnir(self):
         
@@ -259,6 +262,44 @@ class Datamanager:
         for lausnir in laulist:
             print(lausnir)
             
+    def spurcount(self,uid): # liður 4 1
+    
+        query =f"SELECT count(sid) from spurningar WHERE author_id = {uid}"
+        self.cur.execute(query)
+        laulist = self.cur.fetchall()
+        for lausnir in laulist:
+            print(lausnir[0])
+            
+    def idadmin(self,uid): # liður 4 2
+        
+        query =f"SELECT privlage from users WHERE uid = {uid}"
+        self.cur.execute(query)
+        laulist = self.cur.fetchall()
+        if laulist[0][0]==4:
+            return True
+        else:
+            return False
+        
+    def ratinggetter(self,uid): # liður 4 1
+        
+        query =f"SELECT rating from lausnir WHERE lid = {uid}"
+        self.cur.execute(query)
+        laulist = self.cur.fetchall()
+        return laulist[0][0]
+            
+    
+    def admingetprivlage(self,privlage,adminid,admpass):
+        
+        query =f"select passw from users where privlage = 4 and uid = {adminid}"
+        self.cur.execute(query)
+        adminpassreal = self.cur.fetchall()
+        if adminpassreal[0][0] == sha256(admpass.encode('utf-8')).hexdigest():
+            
+            query =f"select * from users where privlage = {privlage}"
+            self.cur.execute(query)
+            list = self.cur.fetchall()
+            for lausnir in list:
+                print(lausnir)
             
     def adminchangestatus(self,uid,nstatus,adminid,admpass):
         
@@ -284,15 +325,34 @@ class Datamanager:
 
 dm = Datamanager()
 
-dm.adduser("testuser","1234",0,1)
+dm.adduser("testuser1","1234",0,1)
+dm.adduser("testuser2","1234",0,1)
+dm.adduser("testuser3","1234",0,1)
 
 dm.adduser("admin","1",0,4)
+print()
+
+dm.addlausn(2,1,"awa",1)
+
+print(dm.ratinggetter(1))
+
+
 
 dm.loadusers()
 
-dm.adminchangestatus(1,3,2,"1")
+print(dm.idadmin(2))
+print(dm.idadmin(1))
 
-dm.loadusers()
+#dm.spurcount(1)
+
+#dm.loadusers()
+print()
+
+#dm.adminchangestatus(1,0,2,"1")
+
+#dm.admingetprivlage(0,2,"1234")
+
+print()
 
 
 """
