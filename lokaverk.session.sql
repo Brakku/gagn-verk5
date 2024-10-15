@@ -1,1 +1,0 @@
-SELECT count(sid) from spurningar WHERE author_id = 3
