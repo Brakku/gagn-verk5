@@ -1,1 +1,1 @@
-### þetta er ekki búið en ég set það á innu
+### ég varð veikur og hef ekki náð að full klára þetta en ég setti coment fyrir hvaða liður ég var að reina klára með hverju ég varð veikur og hef ekki náð að full klára þetta en ég setti coment fyrir hvaða liður ég var að reina klára með hverju 
